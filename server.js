@@ -1,3 +1,6 @@
+
+
+```javascript
 // Pilot backend for the AI calling agent — using ElevenLabs Conversational AI
 // Fill in .env (see .env.example) before running.
 //
@@ -38,7 +41,7 @@ app.post("/api/calls/trigger", async (req, res) => {
       body: JSON.stringify({
         agent_id: ELEVENLABS_AGENT_ID,
         agent_phone_number_id: ELEVENLABS_PHONE_NUMBER_ID,
-        to_number: lead.phone,
+        to_number: lead.number,
       }),
     });
     const data = await response.json();
@@ -59,8 +62,6 @@ app.post("/api/calls/trigger", async (req, res) => {
 // Configure this URL in ElevenLabs agent settings under "Webhooks" / "Post-call webhook"
 app.post("/webhooks/elevenlabs/call-complete", async (req, res) => {
   const { conversation_id, transcript, recording_url, duration_seconds, analysis } = req.body;
-  // "analysis" is where you can later plug in the qualified/callback/not_interested outcome
-  // if you set up an OpenAI summarization step, or ElevenLabs' own built-in analysis.
   await pool.query(
     `UPDATE calls
      SET transcript = $1, recording_url = $2, duration_seconds = $3, outcome = $4, ended_at = NOW()
@@ -78,7 +79,7 @@ app.post("/webhooks/elevenlabs/call-complete", async (req, res) => {
 // ---- 3. Fetch calls for the dashboard ----
 app.get("/api/calls", async (req, res) => {
   const { rows } = await pool.query(
-    `SELECT calls.*, leads.name AS lead_name, leads.phone, leads.property
+    `SELECT calls.*, leads.number AS phone_number, leads.location, leads.status AS lead_status
      FROM calls JOIN leads ON calls.lead_id = leads.id
      ORDER BY calls.created_at DESC`
   );
@@ -86,12 +87,14 @@ app.get("/api/calls", async (req, res) => {
 });
 // ---- 4. Add a new lead ----
 app.post("/api/leads", async (req, res) => {
-  const { name, phone, property } = req.body;
+  const { number, location, status } = req.body;
   const { rows } = await pool.query(
-    `INSERT INTO leads (name, phone, property) VALUES ($1, $2, $3) RETURNING *`,
-    [name, phone, property]
+    `INSERT INTO leads (number, location, status) VALUES ($1, $2, $3) RETURNING *`,
+    [number, location, status || "new"]
   );
   res.json(rows[0]);
 });
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+```
+
