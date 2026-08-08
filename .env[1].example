@@ -1,0 +1,8 @@
+ELEVENLABS_API_KEY=your_elevenlabs_api_key
+ELEVENLABS_AGENT_ID=your_agent_id
+ELEVENLABS_PHONE_NUMBER_ID=leave_blank_until_you_have_a_number
+
+DATABASE_URL=postgresql://user:password@localhost:5432/ai_caller
+
+PUBLIC_BASE_URL=https://your-deployed-url.com
+PORT=3001
