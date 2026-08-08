@@ -23,7 +23,7 @@ app.use((req, res, next) => {
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
 const ELEVENLABS_AGENT_ID = process.env.ELEVENLABS_AGENT_ID;
-const ELEVENLABS_PHONE_NUMBER_ID = process.env.ELEVENLABS_PHONE_NUMBER_ID; // set this once you have a number
+const ELEVENLABS_PHONE_NUMBER_ID = process.env.ELEVENLABS_PHONE_NUMBER_ID;
 // ---- 1. Trigger an outbound call to a lead ----
 app.post("/api/calls/trigger", async (req, res) => {
   const { leadId } = req.body;
@@ -31,7 +31,6 @@ app.post("/api/calls/trigger", async (req, res) => {
   const lead = rows[0];
   if (!lead) return res.status(404).json({ error: "Lead not found" });
   try {
-    // ElevenLabs Conversational AI outbound call endpoint
     const response = await fetch("https://api.elevenlabs.io/v1/convai/twilio/outbound-call", {
       method: "POST",
       headers: {
@@ -59,7 +58,6 @@ app.post("/api/calls/trigger", async (req, res) => {
   }
 });
 // ---- 2. Webhook: ElevenLabs posts here once the call ends ----
-// Configure this URL in ElevenLabs agent settings under "Webhooks" / "Post-call webhook"
 app.post("/webhooks/elevenlabs/call-complete", async (req, res) => {
   const { conversation_id, transcript, recording_url, duration_seconds, analysis } = req.body;
   await pool.query(
@@ -97,4 +95,3 @@ app.post("/api/leads", async (req, res) => {
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 ```
-
