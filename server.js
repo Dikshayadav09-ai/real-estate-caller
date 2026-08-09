@@ -1,4 +1,3 @@
-```javascript
 require("dotenv").config();
 const express = require("express");
 const { Pool } = require("pg");
@@ -83,4 +82,3 @@ app.post("/api/leads", async (req, res) => {
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log("Server running on port " + PORT));
-```
