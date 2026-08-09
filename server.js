@@ -3,12 +3,6 @@
 ```javascript
 // Pilot backend for the AI calling agent — using ElevenLabs Conversational AI
 // Fill in .env (see .env.example) before running.
-//
-// How it fits together:
-// 1. Website calls POST /api/calls/trigger -> this server tells ElevenLabs to call the lead
-// 2. When the call ends, ElevenLabs sends the recording + transcript to our webhook
-// 3. We save everything to our own Postgres database
-// 4. Website calls GET /api/calls -> reads from our database (not from ElevenLabs)
 require("dotenv").config();
 const express = require("express");
 const { Pool } = require("pg");
@@ -77,7 +71,7 @@ app.post("/webhooks/elevenlabs/call-complete", async (req, res) => {
 // ---- 3. Fetch calls for the dashboard ----
 app.get("/api/calls", async (req, res) => {
   const { rows } = await pool.query(
-    `SELECT calls.*, leads.number AS phone_number, leads.location, leads.status AS lead_status
+    `SELECT calls.*, leads.name AS lead_name, leads.number AS phone_number, leads.location
      FROM calls JOIN leads ON calls.lead_id = leads.id
      ORDER BY calls.created_at DESC`
   );
@@ -85,13 +79,12 @@ app.get("/api/calls", async (req, res) => {
 });
 // ---- 4. Add a new lead ----
 app.post("/api/leads", async (req, res) => {
-  const { number, location, status } = req.body;
+  const { name, number, location, status } = req.body;
   const { rows } = await pool.query(
-    `INSERT INTO leads (number, location, status) VALUES ($1, $2, $3) RETURNING *`,
-    [number, location, status || "new"]
+    `INSERT INTO leads (name, number, location, status) VALUES ($1, $2, $3, $4) RETURNING *`,
+    [name, number, location, status || "new"]
   );
   res.json(rows[0]);
 });
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-```
